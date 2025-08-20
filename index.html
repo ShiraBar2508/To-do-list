@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My To-Do List</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #f5f5dc; /* בז' במקרה שהוידאו לא נטען */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 20px;
+        position: relative;
+        color: #fff;
+      }
+
+      /* וידאו ברקע */
+      #bgVideo {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        object-fit: cover; /* ממלא את המסך */
+        object-position: center 70%; /* מציג את החלק התחתון של הוידאו */
+        filter: brightness(0.5); /* מוריד בהירות כדי שהטקסט יהיה קריא */
+      }
+
+      h1 {
+        font-size: 2.8em;
+        color: #fff;
+        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.7);
+        margin-bottom: 20px;
+        font-weight: 600;
+      }
+
+      #taskInput,
+      #dateInput {
+        width: 60%;
+        max-width: 400px;
+        padding: 16px;
+        margin: 10px 0;
+        font-size: 1.3em;
+        border: 2px solid #ccc;
+        border-radius: 12px;
+        outline: none;
+        transition: 0.3s;
+      }
+
+      #taskInput:focus,
+      #dateInput:focus {
+        border-color: #4caf50;
+        box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+      }
+
+      #addTask {
+        padding: 14px 24px;
+        font-size: 1.2em;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: 0.3s;
+        margin-bottom: 20px;
+      }
+      #addTask:hover {
+        background-color: #45a049;
+        transform: scale(1.05);
+      }
+
+      ul {
+        list-style: none;
+        padding: 0;
+        width: 80%;
+        max-width: 500px;
+      }
+
+      li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px;
+        margin: 6px 0;
+        background: rgba(128, 128, 128, 0.3); /* אפור חצי שקוף */
+        border-radius: 12px;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        transition: transform 0.2s;
+        position: relative;
+      }
+
+      li:hover {
+        transform: scale(1.02);
+      }
+
+      .check-btn,
+      .delete-btn {
+        width: 36px;
+        height: 36px;
+        border: none;
+        border-radius: 50%;
+        font-size: 1.2em;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: transform 0.2s;
+      }
+
+      .check-btn {
+        background-color: #4caf50;
+        color: white;
+      }
+      .check-btn:hover {
+        transform: scale(1.2);
+      }
+
+      .delete-btn {
+        background-color: #ff4d4d;
+        color: white;
+      }
+      .delete-btn:hover {
+        transform: scale(1.2);
+        background-color: #ff1a1a;
+      }
+
+      .task-text {
+        flex: 1;
+        font-size: 1.15em;
+        text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+      }
+
+      .task-date {
+        color: #ffff99;
+        font-size: 1em;
+        font-style: italic;
+        margin-left: 10px;
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+      }
+
+      .task-date.overdue {
+        color: #ff0000;
+        text-decoration: line-through;
+      }
+
+      .done {
+        text-decoration: line-through;
+        color: #929292;
+      }
+
+      footer {
+        position: fixed; /* נשאר תמיד בתחתית המסך */
+        bottom: 10px; /* 10 פיקסלים מהתחתית */
+        left: 10px; /* 10 פיקסלים מהצד השמאלי */
+        font-size: 0.9em;
+        color: #fff; /* צבע הטקסט, אפשר לשנות */
+        background: rgba(0, 0, 0, 0.6); /* רקע חצי שקוף */
+        padding: 5px 10px;
+        border-radius: 5px;
+      }
+
+      /* Modal styles */
+      #reminderModal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        display: none;
+      }
+      #modalContent {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 20px;
+        border-radius: 15px;
+        width: 90%;
+        max-width: 400px;
+        text-align: left;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        color: #333;
+
+        max-height: 70vh; /* מקסימום גובה 70% מהמסך */
+        overflow-y: auto; /* אם יש יותר מדי מטלות, יופיע סרגל גלילה */
+      }
+
+      #modalTitle {
+        margin-top: 0;
+        color: #4caf50;
+      }
+      #modalTaskList {
+        padding-left: 20px;
+      }
+      #closeModal {
+        margin-top: 15px;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 10px;
+        background-color: #4caf50;
+        color: white;
+        cursor: pointer;
+      }
+      #closeModal:hover {
+        background-color: #45a049;
+      }
+      li .task-text.done,
+      li .task-date.done {
+        text-decoration: line-through;
+        color: #929292;
+      }
+
+      li button {
+        text-decoration: none; /* מבטיח שאין קו על הכפתורים */
+      }
+      /* רספונסיביות לפלאפונים */
+      @media (max-width: 768px) {
+        h1 {
+          font-size: 2em; /* קטן יותר למסכים קטנים */
+        }
+
+        #taskInput,
+        #dateInput {
+          width: 90%; /* תופס כמעט את כל המסך */
+          font-size: 1.1em;
+          padding: 12px;
+        }
+
+        #addTask {
+          width: 90%;
+          padding: 12px;
+          font-size: 1em;
+        }
+
+        ul {
+          width: 95%;
+        }
+
+        li {
+          flex-direction: column; /* מטלות עמודות במקום שורה */
+          align-items: flex-start;
+          gap: 6px;
+          padding: 12px;
+        }
+
+        .task-date {
+          margin-left: 0; /* מתאים למבנה עמודה */
+        }
+
+        .check-btn,
+        .delete-btn {
+          width: 30px;
+          height: 30px;
+          font-size: 1em;
+        }
+
+        #modalContent {
+          width: 95%;
+          max-width: 300px;
+        }
+      }
+
+      /* לפלאפונים קטנים מאוד */
+      @media (max-width: 480px) {
+        h1 {
+          font-size: 1.6em;
+        }
+
+        #taskInput,
+        #dateInput {
+          font-size: 1em;
+          padding: 10px;
+        }
+
+        #addTask {
+          font-size: 0.9em;
+          padding: 10px;
+        }
+
+        li {
+          padding: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Video Background -->
+    <video autoplay muted loop id="bgVideo">
+      <source
+        src="1064f4c993341b1d8da05f6c33fac161_720w.mp4"
+        type="video/mp4"
+      />
+      Your browser does not support the video tag.
+    </video>
+
+    <h1>My To-Do List</h1>
+    <input type="text" id="taskInput" placeholder="Type your task..." />
+    <input
+      type="text"
+      id="dateInput"
+      placeholder="DD/MM/YY"
+      style="display: none"
+    />
+    <button id="addTask">Add Task</button>
+
+    <ul id="taskList"></ul>
+
+    <footer>© Shira Bar shalom</footer>
+
+    <div id="reminderModal">
+      <div id="modalContent">
+        <h2 id="modalTitle"></h2>
+        <ul id="modalTaskList"></ul>
+        <button id="closeModal">Close</button>
+      </div>
+    </div>
+
+    <script>
+      let taskInput = document.getElementById("taskInput");
+      let dateInput = document.getElementById("dateInput");
+      let addButton = document.getElementById("addTask");
+      let taskList = document.getElementById("taskList");
+
+      let tempTask = "";
+      const complimentsHappy = [
+        "GREAT! 🎉",
+        "WOW! 🤩",
+        "AMAZING! ✨",
+        "NICE! 👍",
+        "FANTASTIC! 💥",
+        "SUPERB! 🏆",
+        "AWESOME! 😎",
+      ];
+      const complimentsSad = [
+        "Oops... 😢",
+        "Try again... 😕",
+        "You can do it! 💔",
+        "Don't give up! 🙁",
+        "Oh no... 😟",
+      ];
+
+      function isValidDate(dateString) {
+        const regex = /^\d{2}\/\d{2}\/\d{2}$/;
+        if (!regex.test(dateString)) return false;
+        const [day, month, year] = dateString.split("/").map(Number);
+        const fullYear = 2000 + year;
+        const date = new Date(fullYear, month - 1, day);
+        return (
+          date &&
+          date.getFullYear() === fullYear &&
+          date.getMonth() === month - 1 &&
+          date.getDate() === day
+        );
+      }
+
+      function parseDateForComparison(dateString) {
+        const [day, month, year] = dateString.split("/").map(Number);
+        const fullYear = 2000 + year;
+        return new Date(fullYear, month - 1, day);
+      }
+
+      function showCompliment(e, happy = true) {
+        const list = happy ? complimentsHappy : complimentsSad;
+        const compText = document.createElement("span");
+        compText.textContent = list[Math.floor(Math.random() * list.length)];
+
+        compText.style.position = "absolute";
+        compText.style.fontSize = "2em"; // גדול יותר
+        compText.style.fontWeight = "bold";
+        compText.style.color = "#FFD700"; // צבע זהב
+        compText.style.left = e.clientX - 20 + "px";
+        compText.style.top = e.clientY - 30 + "px";
+        compText.style.pointerEvents = "none";
+        compText.style.opacity = 1;
+        compText.style.transition = "all 1s ease-out";
+
+        document.body.appendChild(compText);
+
+        setTimeout(() => {
+          compText.style.transform = "translateY(-80px)";
+          compText.style.opacity = 0;
+        }, 50);
+
+        setTimeout(() => compText.remove(), 1050);
+      }
+      function saveTasks() {
+        const tasks = [];
+        taskList.querySelectorAll("li").forEach((li) => {
+          const taskText = li.querySelector(".task-text").textContent;
+          const dateText = li
+            .querySelector(".task-date")
+            .textContent.split("Due Date: ")[1];
+          const done = li
+            .querySelector(".task-text")
+            .classList.contains("done");
+          tasks.push({ taskText, dateText, done });
+        });
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+      }
+
+      function loadTasks() {
+        const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+        tasks.forEach((t) => addTask(t.taskText, t.dateText, t.done));
+      }
+
+      taskInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" && taskInput.value.trim() !== "") {
+          tempTask = taskInput.value.trim();
+          taskInput.style.display = "none";
+          dateInput.style.display = "block";
+          dateInput.focus();
+        }
+      });
+
+      dateInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          const dateValue = dateInput.value.trim();
+          if (!isValidDate(dateValue)) {
+            alert("Please enter a valid date in DD/MM/YY format!");
+            return;
+          }
+          addTask(tempTask, dateValue);
+          resetInputs();
+          showTomorrowReminder();
+        }
+      });
+
+      addButton.addEventListener("click", function () {
+        const dateValue = dateInput.value.trim();
+        if (!isValidDate(dateValue)) {
+          alert("Please enter a valid date in DD/MM/YY format!");
+          return;
+        }
+        addTask(tempTask, dateValue);
+        resetInputs();
+        showTomorrowReminder();
+      });
+
+      function addTask(taskText, taskDate, done = false) {
+        let newTask = document.createElement("li");
+
+        let checkBtn = document.createElement("button");
+        checkBtn.classList.add("check-btn");
+        checkBtn.textContent = "✔";
+        newTask.appendChild(checkBtn);
+
+        let textSpan = document.createElement("span");
+        textSpan.classList.add("task-text");
+        textSpan.textContent = taskText;
+        if (done) textSpan.classList.add("done");
+        newTask.appendChild(textSpan);
+
+        let dateSpan = document.createElement("span");
+        dateSpan.textContent = "Due Date: " + taskDate;
+        dateSpan.classList.add("task-date");
+
+        let inputDate = parseDateForComparison(taskDate);
+        let today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (inputDate < today) dateSpan.classList.add("overdue");
+
+        newTask.appendChild(dateSpan);
+
+        let deleteBtn = document.createElement("button");
+        deleteBtn.classList.add("delete-btn");
+        deleteBtn.textContent = "❌";
+        newTask.appendChild(deleteBtn);
+        checkBtn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          const isDone = textSpan.classList.contains("done");
+          textSpan.classList.toggle("done");
+          dateSpan.classList.toggle("done");
+          // אם זה עכשיו מסומן, מחמאה שמחה, אם ביטול - מחמאה עצובה
+          showCompliment(e, !isDone);
+          saveTasks();
+        });
+        deleteBtn.addEventListener("click", function () {
+          newTask.remove();
+          saveTasks();
+        });
+
+        taskList.appendChild(newTask);
+        saveTasks();
+      }
+
+      function resetInputs() {
+        taskInput.value = "";
+        dateInput.value = "";
+        taskInput.style.display = "block";
+        dateInput.style.display = "none";
+        tempTask = "";
+        taskInput.focus();
+      }
+
+      // Modal for tomorrow's tasks
+      function showTomorrowReminder() {
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+
+        const options = { weekday: "long" };
+        const dayName = tomorrow.toLocaleDateString("en-US", options);
+
+        let tasksTomorrow = [];
+        taskList.querySelectorAll("li").forEach((li) => {
+          const textSpan = li.querySelector(".task-text");
+          if (textSpan.classList.contains("done")) return;
+
+          const dateText = li
+            .querySelector(".task-date")
+            .textContent.split("Due Date: ")[1];
+          const [day, month, year] = dateText.split("/").map(Number);
+          const fullDate = new Date(2000 + year, month - 1, day);
+
+          if (fullDate.toDateString() === tomorrow.toDateString()) {
+            tasksTomorrow.push({ task: textSpan.textContent, date: dateText });
+          }
+        });
+
+        if (tasksTomorrow.length > 0) {
+          document.getElementById(
+            "modalTitle"
+          ).textContent = `Tomorrow ${dayName}, you need to submit:`;
+          const ul = document.getElementById("modalTaskList");
+          ul.innerHTML = "";
+          tasksTomorrow.forEach((item) => {
+            const li = document.createElement("li");
+            li.textContent = "• " + item.task + " (Due: " + item.date + ")";
+            ul.appendChild(li);
+          });
+          document.getElementById("reminderModal").style.display = "flex";
+        }
+      }
+
+      document.getElementById("closeModal").addEventListener("click", () => {
+        document.getElementById("reminderModal").style.display = "none";
+      });
+
+      window.onload = function () {
+        loadTasks();
+        showTomorrowReminder();
+      };
+    </script>
+  </body>
+</html>
