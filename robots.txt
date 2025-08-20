@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://shirabar2508.github.io/To-do-list/sitemap.xml
